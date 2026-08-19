@@ -17,14 +17,14 @@ const getGroqClient = () => {
   return groq;
 };
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const MODEL = "llama-3.1-8b-instant";
+// Constants 
+const MODEL = "openai/gpt-oss-120b";
 const MAX_USER_MESSAGE_LENGTH = 500;
 const MAX_HISTORY_MESSAGES = 10; // Keep context window small = fewer tokens
 const VALID_CONTEXTS = ["income", "expense", "dashboard"];
 const VALID_ROLES = ["user", "assistant"];
 
-// ─── Utility: extract JSON from Groq response ────────────────────────────────
+// Utility: extract JSON from Groq response 
 // Tries ```json block first, falls back to raw object scan.
 // Returns null on any parse failure — never throws.
 const extractJSON = (text) => {
@@ -41,7 +41,7 @@ const extractJSON = (text) => {
   return null;
 };
 
-// ─── Utility: extract human message from Groq response ───────────────────────
+// Utility: extract human message from Groq response 
 // Multi-pass cleaner handles all LLM output variations:
 //   1. Fenced ```json ... ``` blocks
 //   2. Raw JSON objects { ... } that weren't wrapped in a code fence
@@ -65,7 +65,7 @@ const extractHumanMessage = (text) => {
   return cleaned;
 };
 
-// ─── Controller ──────────────────────────────────────────────────────────────
+// Controller 
 exports.chat = async (req, res) => {
   // 1. Validate required fields
   const { messages, pageContext, currentDate } = req.body;
