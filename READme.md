@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="frontend/public/expense logo.png" alt="Expense Tracker Logo" width="80" height="80" />
+  <img src="frontend/public/expense logo.png" alt="Finance Tracker Logo" width="80" height="80" />
 </p>
 
-<h1 align="center">💰 Expense Tracker</h1>
+<h1 align="center">Finance Tracker</h1>
 
 <p align="center">
   <strong>A full-stack personal finance management application to track income, expenses, and visualize your financial health — all in one place.</strong>
