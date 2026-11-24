@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import Input from "../Inputs/Input";
 import EmojiPickerPopup from "../EmojiPickerPopup";
+import { EXPENSE_CATEGORIES, normalizeCategory } from "../../utils/aiConstants";
+import { getLocalISODate } from "../../utils/aiValidation";
 
 const AddExpenseForm = ({ onAddExpense }) => {
 
@@ -20,11 +22,38 @@ const AddExpenseForm = ({ onAddExpense }) => {
                 onSelect={(selectedIcon) => handleChange("icon", selectedIcon)}
             />
 
+            {/* Quick-pick chips — tap to fill the Category field with a canonical name */}
+            <div className="mb-2">
+                <label className="text-[13px] text-slate-800 dark:text-slate-300 mb-2 block">
+                    Quick pick
+                </label>
+                <div className="flex flex-wrap gap-2">
+                    {EXPENSE_CATEGORIES.map((cat) => {
+                        const isSelected =
+                            income.category.trim().toLowerCase() === cat.toLowerCase();
+                        return (
+                            <button
+                                key={cat}
+                                type="button"
+                                onClick={() => handleChange("category", cat)}
+                                className={`text-xs font-medium rounded-lg px-3 py-1.5 border cursor-pointer transition-colors ${
+                                    isSelected
+                                        ? "text-white bg-primary border-primary"
+                                        : "text-primary bg-teal-50 dark:bg-primary/10 border-teal-100 dark:border-primary/20 hover:bg-teal-100 dark:hover:bg-primary/20"
+                                }`}
+                            >
+                                {cat}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
             <Input
                 value={income.category}
                 onChange={({ target }) => handleChange("category", target.value)}
                 label="Category"
-                palceholder="Rent, Groceries, etc"
+                placeholder="Rent, Groceries, etc"
                 type="text"
             />
 
@@ -32,7 +61,7 @@ const AddExpenseForm = ({ onAddExpense }) => {
                 value={income.amount}
                 onChange={({ target }) => handleChange("amount", target.value)}
                 label="Amount"
-                palceholder="0.00"
+                placeholder="0.00"
                 type="number"
             />
 
@@ -40,18 +69,22 @@ const AddExpenseForm = ({ onAddExpense }) => {
                 value={income.date}
                 onChange={({ target }) => handleChange("date", target.value)}
                 label="Date"
-                palceholder=""
+                placeholder=""
                 type="date"
-                max={new Date().toISOString().split("T")[0]}
+                max={getLocalISODate()}
             />
 
             <div className='flex justify-end mt-6'>
-                <button className="add-btn add-btn-fill" type="button" onClick={() => onAddExpense(income)}>
+                <button
+                    className="add-btn add-btn-fill"
+                    type="button"
+                    onClick={() => onAddExpense({ ...income, category: normalizeCategory(income.category) })}
+                >
                     Add Expense
                 </button>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default AddExpenseForm
+export default AddExpenseForm;

@@ -4,18 +4,12 @@
 
 import ConfirmationCard from "./ConfirmationCard";
 
-const ChatMessage = ({ message, pendingTransaction, onConfirm, onCancel, isSaving }) => {
+const ChatMessage = ({ message, showCard, pendingTransaction, onConfirm, onCancel, isSaving }) => {
   const isAi = message.role === "assistant";
 
-  // Only show ConfirmationCard on the LAST AI message that has parsedData.
-  // This avoids showing stale cards from earlier turns.
-  const showCard =
-    isAi &&
-    message.parsedData?.type &&
-    message.parsedData?.amount &&
-    !message.parsedData?.confirmed &&
-    !message.parsedData?.needsClarification &&
-    pendingTransaction;
+  // Parent (ChatMessages) decides which bubble owns the card via the showCard prop.
+  // This guarantees only the latest transaction bubble ever shows Confirm/Cancel.
+  const renderCard = isAi && showCard && pendingTransaction;
 
   return (
     <div className={`flex items-start gap-2 ${isAi ? "" : "flex-row-reverse"}`}>
@@ -29,7 +23,7 @@ const ChatMessage = ({ message, pendingTransaction, onConfirm, onCancel, isSavin
         {/* Preserve newlines in AI messages */}
         <p className="whitespace-pre-wrap">{message.content}</p>
 
-        {showCard && (
+        {renderCard && (
           <ConfirmationCard
             transaction={pendingTransaction}
             onConfirm={onConfirm}

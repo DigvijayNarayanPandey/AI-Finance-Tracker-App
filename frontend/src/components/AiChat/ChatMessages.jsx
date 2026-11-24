@@ -1,9 +1,10 @@
 // Scrollable message list. useRef + useEffect auto-scrolls to the latest
 // message whenever messages or loading state changes.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 import TypingIndicator from "./TypingIndicator";
+import { isRenderableTransaction } from "../../utils/aiValidation";
 
 const ChatMessages = ({
   messages,
@@ -14,6 +15,19 @@ const ChatMessages = ({
   onCancel,
 }) => {
   const bottomRef = useRef(null);
+
+  // Derive which message bubble owns the confirmation card.
+  // Only the most recent assistant message with a valid transaction gets the card.
+  // This prevents showing multiple cards when the conversation has several parsedData bubbles.
+  const cardMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role === "assistant" && isRenderableTransaction(m.parsedData)) {
+        return m.id;
+      }
+    }
+    return null;
+  }, [messages]);
 
   useEffect(() => {
     // Smooth scroll only — avoids jarring jump on initial mount
@@ -26,6 +40,7 @@ const ChatMessages = ({
         <ChatMessage
           key={msg.id}
           message={msg}
+          showCard={msg.id === cardMessageId}
           pendingTransaction={pendingTransaction}
           onConfirm={onConfirm}
           onCancel={onCancel}
