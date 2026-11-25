@@ -4,7 +4,7 @@ import { BASE_URL } from "./apiPaths";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 20000,
+  timeout: 45000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -39,12 +39,12 @@ axiosInstance.interceptors.response.use(
     const requestConfig = error.config || {};
     const isTimeoutOrNetworkError =
       error.code === "ECONNABORTED" || error.code === "ERR_NETWORK";
-    const isLoginRequest = (requestConfig.url || "").includes(
-      "/api/v1/auth/login",
-    );
+    const isAuthRequest =
+      (requestConfig.url || "").includes("/api/v1/auth/login") ||
+      (requestConfig.url || "").includes("/api/v1/auth/register");
 
-    // Retry login once for cold starts/network hiccups and inform the user.
-    if (isTimeoutOrNetworkError && isLoginRequest && !requestConfig._retry) {
+    // Retry login or register once for cold starts/network hiccups and inform the user.
+    if (isTimeoutOrNetworkError && isAuthRequest && !requestConfig._retry) {
       requestConfig._retry = true;
       toast.loading("Server is waking up, retrying...", {
         id: "server-wakeup",

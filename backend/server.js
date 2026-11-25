@@ -58,6 +58,11 @@ app.get("/", (req, res) => {
   res.status(200).send("API is running");
 });
 
+// Dedicated health endpoint for keep-alive pingers (UptimeRobot, cron-job.org)
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 app.use("/api/v1", (req, res, next) => {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   next();

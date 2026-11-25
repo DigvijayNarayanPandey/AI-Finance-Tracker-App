@@ -12,6 +12,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [slowServerNotice, setSlowServerNotice] = useState(false);
 
   const { updateUser } = useContext(UserContext);
 
@@ -20,6 +22,8 @@ const Login = () => {
   // Handle Login form Submit
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
 
     if (!validateEmail(email)) {
       setError("Please enter a valid email address!");
@@ -32,6 +36,12 @@ const Login = () => {
     }
 
     setError("");
+    setLoading(true);
+    setSlowServerNotice(false);
+
+    const slowTimer = setTimeout(() => {
+      setSlowServerNotice(true);
+    }, 4000);
 
     //Login API call
     try {
@@ -52,6 +62,10 @@ const Login = () => {
       } else {
         setError("Something went wrong. Please try again.");
       }
+    } finally {
+      clearTimeout(slowTimer);
+      setLoading(false);
+      setSlowServerNotice(false);
     }
   };
 
@@ -98,9 +112,25 @@ const Login = () => {
           />
           {error && <p className="text-red-500 text-xs pb-2.5">{error}</p>}
 
-          <button type="submit" className="btn-primary">
-            Login
+          <button
+            type="submit"
+            className="btn-primary flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Logging in...</span>
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
+          {loading && slowServerNotice && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 text-center animate-pulse">
+              Waking up server... this can take ~30–45s on first load.
+            </p>
+          )}
           <p className="text-[13px] text-slate-800 dark:text-slate-200 mt-3">
             Don't have an account{" "}
             <Link className="font-medium text-primary underline" to="/signup">

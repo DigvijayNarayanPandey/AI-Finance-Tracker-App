@@ -23,17 +23,36 @@ const CATEGORY_ICONS = {
   "Gift": "🎁", "Bonus": "🎯",
 };
 
-// Compute yesterday in DD-MM-YYYY format for the prompt
-const getYesterday = () => {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
+// ─── Date helpers for the system prompt ──────────────────────────────────────
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Fallback only: used when the client sends something that is not a valid YYYY-MM-DD string.
+// Server UTC is acceptable here because it is only the fallback.
+const serverTodayISO = () => new Date().toISOString().split("T")[0];
+
+// Pure date arithmetic on a YYYY-MM-DD string.
+// Uses Date.UTC so the server timezone is never involved.
+const shiftISODate = (iso, days) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().split("T")[0];
+};
+
+// Returns the weekday name (e.g. "Sunday") for a YYYY-MM-DD string.
+const weekdayOf = (iso) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
 };
 
 const buildSystemPrompt = (pageContext, currentDate) => {
+  // Use the client-sent date if it's a valid ISO date; fall back to server UTC.
+  const today =
+    ISO_RE.test(currentDate) && !Number.isNaN(Date.parse(`${currentDate}T00:00:00Z`))
+      ? currentDate
+      : serverTodayISO();
+  const yesterday = shiftISODate(today, -1);
+
   const defaultTypeInstruction =
     pageContext === "expense"
       ? "If transaction type is unclear, default to EXPENSE."
@@ -44,8 +63,9 @@ const buildSystemPrompt = (pageContext, currentDate) => {
   return `You are a transaction parser for an Indian personal finance app. Your ONLY job is to parse what the user describes and confirm with them before anything is saved.
 
 CONTEXT:
-- Today: ${currentDate}
-- Yesterday: ${getYesterday()}
+- Today: ${today} (${weekdayOf(today)})
+- Yesterday: ${yesterday}
+- All dates you output MUST be in YYYY-MM-DD format
 - Page context: ${pageContext}
 - ${defaultTypeInstruction}
 

@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Cell,
 } from "recharts";
@@ -19,17 +18,49 @@ const CustomBarChart = ({ data }) => {
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const hasMultiple = dataPoint.items && dataPoint.items.length > 1;
+
       return (
-        <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-2 border border-gray-300 dark:border-slate-700">
-          <p className="text-xs font-semibold text-teal-800 dark:text-teal-400 mb-1">
-            {payload[0].payload.category || payload[0].payload.source}
-          </p>
-          <p className="text-sm text-gray-600 dark:text-slate-400">
-            Amount:{" "}
-            <span className="text-sm font-medium text-gray-900 dark:text-slate-100">
-              ₹{Number(payload[0].payload.amount).toLocaleString("en-IN")}
-            </span>
-          </p>
+        <div className="bg-white dark:bg-slate-800 shadow-md rounded-lg p-2.5 border border-gray-300 dark:border-slate-700 min-w-[150px]">
+          {hasMultiple ? (
+            <>
+              <p className="text-xs font-semibold text-teal-800 dark:text-teal-400 mb-1.5">
+                {dataPoint.month} ({dataPoint.items.length} {dataPoint.source !== undefined ? "Incomes" : "Expenses"})
+              </p>
+              <div className="space-y-1 mb-2 max-h-36 overflow-y-auto">
+                {dataPoint.items.map((sub, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center text-xs text-gray-600 dark:text-slate-300 gap-3"
+                  >
+                    <span className="truncate max-w-[120px]">{sub.source || sub.category}</span>
+                    <span className="font-medium whitespace-nowrap">
+                      ₹{Number(sub.amount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-gray-200 dark:border-slate-700 pt-1.5 flex justify-between items-center text-xs font-semibold text-gray-900 dark:text-slate-100">
+                <span>Total:</span>
+                <span className="text-teal-700 dark:text-teal-400">
+                  ₹{Number(dataPoint.amount).toLocaleString("en-IN")}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-semibold text-teal-800 dark:text-teal-400 mb-1">
+                {dataPoint.category || dataPoint.source}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-slate-400">
+                Amount:{" "}
+                <span className="text-sm font-medium text-gray-900 dark:text-slate-100">
+                  ₹{Number(dataPoint.amount).toLocaleString("en-IN")}
+                </span>
+              </p>
+            </>
+          )}
         </div>
       );
     }
@@ -52,6 +83,7 @@ const CustomBarChart = ({ data }) => {
             dataKey="amount"
             fill="#FF8042"
             radius={[10, 10, 0, 0]}
+            minPointSize={4}
             activeDot={{ r: 8, fill: "yellow" }}
             activeStyle={{ fill: "green" }}
           >

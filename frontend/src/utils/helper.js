@@ -59,13 +59,41 @@ export const prepareExpenseBarChartData = (data = []) => {
     (a, b) => new Date(a.date) - new Date(b.date),
   );
 
-  const chartData = sortedData.map((item) => ({
-    month: formatDateDoMMM(item?.date),
-    category: item?.category,
-    amount: item?.amount,
-  }));
+  const grouped = new Map();
 
-  return chartData;
+  sortedData.forEach((item) => {
+    if (!item?.date) return;
+    const d = new Date(item.date);
+    if (isNaN(d.getTime())) return;
+
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, {
+        dateKey,
+        month: formatDateDoMMM(item.date),
+        amount: 0,
+        category: item?.category || "",
+        items: [],
+      });
+    }
+
+    const group = grouped.get(dateKey);
+    const itemAmount = Number(item?.amount) || 0;
+    group.amount += itemAmount;
+    group.items.push({
+      category: item?.category || "Expense",
+      amount: itemAmount,
+    });
+
+    if (group.items.length === 1) {
+      group.category = item?.category || "";
+    } else {
+      group.category = `${group.items.length} Expenses`;
+    }
+  });
+
+  return Array.from(grouped.values());
 };
 
 export const prepareIncomeBarChartData = (data = []) => {
@@ -73,15 +101,43 @@ export const prepareIncomeBarChartData = (data = []) => {
     (a, b) => new Date(a.date) - new Date(b.date),
   );
 
-  const chartData = sortedData.map((item) => ({
-    month: formatDateDoMMM(item?.date),
-    amount: item?.amount,
-    source: item?.source,
-  }));
+  const grouped = new Map();
 
-  return chartData;
+  sortedData.forEach((item) => {
+    if (!item?.date) return;
+    const d = new Date(item.date);
+    if (isNaN(d.getTime())) return;
+
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, {
+        dateKey,
+        month: formatDateDoMMM(item.date),
+        amount: 0,
+        source: item?.source || "",
+        items: [],
+      });
+    }
+
+    const group = grouped.get(dateKey);
+    const itemAmount = Number(item?.amount) || 0;
+    group.amount += itemAmount;
+    group.items.push({
+      source: item?.source || "Income",
+      amount: itemAmount,
+    });
+
+    if (group.items.length === 1) {
+      group.source = item?.source || "";
+    } else {
+      group.source = `${group.items.length} Incomes`;
+    }
+  });
+
+  return Array.from(grouped.values());
 };
 
-// Alias — identical shape to prepareExpenseBarChartData ({ month, amount, category }).
+// Alias — identical shape to prepareExpenseBarChartData ({ month, amount, category, items }).
 // Kept as a named export because ExpenseOverview.jsx imports it for the line chart.
 export const prepareExpenseLineChartData = prepareExpenseBarChartData;
