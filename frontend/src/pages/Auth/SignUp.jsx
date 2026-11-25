@@ -17,6 +17,8 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [slowServerNotice, setSlowServerNotice] = useState(false);
 
   const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
@@ -24,6 +26,8 @@ const SignUp = () => {
   // Handle Sign Up Form Submit
   const handleSignUp = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
 
     let profileImageUrl = "";
 
@@ -43,6 +47,12 @@ const SignUp = () => {
     }
 
     setError("");
+    setLoading(true);
+    setSlowServerNotice(false);
+
+    const slowTimer = setTimeout(() => {
+      setSlowServerNotice(true);
+    }, 4000);
 
     // SignUp API call
     try {
@@ -72,6 +82,10 @@ const SignUp = () => {
       } else {
         setError("Something went wrong. Please try again.");
       }
+    } finally {
+      clearTimeout(slowTimer);
+      setLoading(false);
+      setSlowServerNotice(false);
     }
   };
 
@@ -135,9 +149,25 @@ const SignUp = () => {
           </div>
           {error && <p className="text-red-500 text-xs pb-2.5">{error}</p>}
 
-          <button type="submit" className="btn-primary">
-            SignUp
+          <button
+            type="submit"
+            className="btn-primary flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              "SignUp"
+            )}
           </button>
+          {loading && slowServerNotice && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 text-center animate-pulse">
+              Waking up server... this can take ~30–45s on first load.
+            </p>
+          )}
           <p className="text-[13px] text-slate-800 dark:text-slate-200 mt-3">
             Already have an account{" "}
             <Link className="font-medium text-primary underline" to="/login">
